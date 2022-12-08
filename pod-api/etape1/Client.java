@@ -30,10 +30,12 @@ public class Client extends UnicastRemoteObject implements Client_itf {
 	
 	// binding in the name server
 	public static void register(String name, SharedObject_itf so) {
+
 	}
 
 	// creation of a shared object
 	public static SharedObject create(Object o) {
+		return new SharedObject(o);
 	}
 	
 /////////////////////////////////////////////////////////////

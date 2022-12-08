@@ -1,16 +1,21 @@
 import java.io.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class SharedObject implements Serializable, SharedObject_itf {
-	
+
 	public enum lockType {NL, RLC, WLC, RLT, WLT, RLT_WLC};
 
 	private lockType lock;
 
 	public Object obj;
 
+	public SharedObject(Object o) {
+		this.obj = o;
+		lock = lockType.NL;
+	}
+
 	// invoked by the user program on the client node
 	public void lock_read() {
-
 	}
 
 	// invoked by the user program on the client node

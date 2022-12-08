@@ -94,9 +94,9 @@ class writeListener implements ActionListener {
 	public void actionPerformed (ActionEvent e) {
 		
 		// get the value to be written from the buffer
-        	String s = irc.data.getText();
+        String s = irc.data.getText();
         	
-        	// lock the object in write mode
+        // lock the object in write mode
 		irc.sentence.lock_write();
 		
 		// invoke the method
