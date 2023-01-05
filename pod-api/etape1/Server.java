@@ -10,27 +10,37 @@ import java.util.HashMap;
 
 public class Server extends UnicastRemoteObject implements Server_itf {
 
-    private HashMap<Integer,ServerObject> objects;
+    private ArrayList<ServerObject> objects;
+
+    private HashMap<String, Integer> registre;
 
     protected Server() throws RemoteException {
-        objects = new HashMap<Integer,ServerObject>();
+        objects = new ArrayList<ServerObject>();
+        registre = new HashMap<String, Integer>();
     }
 
     @Override
     public int lookup(String name) throws RemoteException {
-        // TODO Auto-generated method stub
-        return 0;
+        if (registre.containsKey(name)) {
+            return registre.get(name);
+        } else {
+            return -1;
+        }
     }
 
     @Override
     public void register(String name, int id) throws RemoteException {
-        
+        if (registre.containsKey(name)) {
+            System.out.println("L'objet existe déjà");
+        } else {
+            registre.put(name, id);
+        }
     }
 
     @Override
     public int create(Object o) throws RemoteException {
-        // TODO Auto-generated method stub
-        return 0;
+        objects.add(new ServerObject(o));
+        return objects.size()-1;
     }
 
     @Override
@@ -51,7 +61,7 @@ public class Server extends UnicastRemoteObject implements Server_itf {
             Registry registre = LocateRegistry.createRegistry(4000);
         } catch (RemoteException e) {
         }
-        Naming.rebind("//localhost:4000/" + args[0], new Server());
+        Naming.rebind("//localhost:4000/server", new Server());
     }
 
 }
