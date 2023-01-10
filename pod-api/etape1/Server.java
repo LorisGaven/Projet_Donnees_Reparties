@@ -45,8 +45,8 @@ public class Server extends UnicastRemoteObject implements Server_itf {
 
     @Override
     public Object lock_read(int id, Client_itf client) throws RemoteException {
-        // TODO Auto-generated method stub
-        return null;
+        // A compléter
+        return objects.get(id).obj;
     }
 
     @Override
@@ -62,6 +62,10 @@ public class Server extends UnicastRemoteObject implements Server_itf {
         } catch (RemoteException e) {
         }
         Naming.rebind("//localhost:4000/server", new Server());
+    }
+
+    public ArrayList<ServerObject> getObjects() {
+        return objects;
     }
 
 }

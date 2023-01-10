@@ -1,15 +1,20 @@
 import java.rmi.*;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.rmi.registry.*;
 import java.net.*;
 
 public class Client extends UnicastRemoteObject implements Client_itf {
 
-	private static ArrayList<SharedObject> objects;
+	private static HashMap<Integer,SharedObject> objects;
+
+	private static Client instance;
+
+	private static Server_itf s;
 
 	public Client() throws RemoteException {
-		super(); 
+		super();
 	}
 
 
@@ -19,41 +24,59 @@ public class Client extends UnicastRemoteObject implements Client_itf {
 
 	// initialization of the client layer
 	public static void init() {
-		objects = new ArrayList<SharedObject>();
+		if (Client.instance == null) {
+			try {
+				Client.instance = new Client();
+				s = (Server_itf) Naming.lookup("//localhost:4000/server");
+				objects = new HashMap<Integer,SharedObject>();
+			} catch (RemoteException | MalformedURLException | NotBoundException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	// lookup in the name server
 	public static SharedObject lookup(String name) {
+		int id;
 		try {
-			Server_itf s = (Server_itf) Naming.lookup("//localhost:4000/server");
-			int id = s.lookup(name);
+			id = s.lookup(name);
 			if (id == -1) {
 				return null;
 			} else {
-				return objects.get(id);
+				SharedObject object = new SharedObject(s.lock_read(id, Client.instance), id);
+				objects.put(id, object);
+				return object;
 			}
-		} catch (MalformedURLException | RemoteException | NotBoundException e) {
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		}
-		return null;
 	}		
 	
 	// binding in the name server
 	public static void register(String name, SharedObject_itf so) {
 		try {
-			Server_itf s = (Server_itf) Naming.lookup("//localhost:4000/server");
-			objects.add((SharedObject) so);
-			s.register(name, s.create(((SharedObject) so).obj));
-		} catch (MalformedURLException | RemoteException | NotBoundException e) {
+			s.register(name, ((SharedObject) so).getId());
+		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 
 	// creation of a shared object
 	public static SharedObject create(Object o) {
-		return new SharedObject(o);
+		int id;
+		try {
+			id = s.create(o);
+			SharedObject object = new SharedObject(o, id);
+			objects.put(id, object);
+			return object;
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 /////////////////////////////////////////////////////////////

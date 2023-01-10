@@ -9,9 +9,12 @@ public class SharedObject implements Serializable, SharedObject_itf {
 
 	public Object obj;
 
-	public SharedObject(Object o) {
+	private int id;
+
+	public SharedObject(Object o, int id) {
 		this.obj = o;
-		lock = lockType.NL;
+		this.lock = lockType.NL;
+		this.id = id;
 	}
 
 	// invoked by the user program on the client node
@@ -39,5 +42,9 @@ public class SharedObject implements Serializable, SharedObject_itf {
 
 	public synchronized Object invalidate_writer() {
 		return null;
+	}
+
+	public int getId() {
+		return id;
 	}
 }
