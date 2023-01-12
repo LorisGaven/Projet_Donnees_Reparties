@@ -39,20 +39,19 @@ public class Server extends UnicastRemoteObject implements Server_itf {
 
     @Override
     public int create(Object o) throws RemoteException {
-        objects.add(new ServerObject(o));
-        return objects.size()-1;
+        int id = objects.size();
+        objects.add(new ServerObject(o, id));
+        return id;
     }
 
     @Override
     public Object lock_read(int id, Client_itf client) throws RemoteException {
-        // A compléter
-        return objects.get(id).obj;
+        return objects.get(id).lock_read(client);
     }
 
     @Override
     public Object lock_write(int id, Client_itf client) throws RemoteException {
-        // TODO Auto-generated method stub
-        return null;
+        return objects.get(id).lock_write(client);
     }
     
 
