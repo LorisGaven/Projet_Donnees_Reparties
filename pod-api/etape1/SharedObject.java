@@ -37,7 +37,8 @@ public class SharedObject implements Serializable, SharedObject_itf {
 				e.printStackTrace();
 			}
 		}
-
+		
+		moniteur.unlock();
 		switch(lock) {
 			case NL :
 				lock = lockType.RLT;
@@ -53,7 +54,7 @@ public class SharedObject implements Serializable, SharedObject_itf {
 				break;
 		}
 
-		moniteur.unlock();
+		
 	}
 
 	// invoked by the user program on the client node
@@ -67,11 +68,11 @@ public class SharedObject implements Serializable, SharedObject_itf {
 			}
 		}
 
+		moniteur.unlock();
 		if (lock == lockType.NL || lock == lockType.RLC) {
 			obj = Client.lock_write(id);
 		}
 		lock = lockType.WLT;
-		moniteur.unlock();
 	}
 
 	// invoked by the user program on the client node
@@ -91,7 +92,7 @@ public class SharedObject implements Serializable, SharedObject_itf {
 	public synchronized Object reduce_lock() {
 		moniteur.lock();
 		attendre = true;
-		if (lock == lockType.WLT) {
+		while (lock == lockType.WLT) {
 			try {
 				accesPossible.await();
 			} catch (InterruptedException e) {
@@ -148,9 +149,5 @@ public class SharedObject implements Serializable, SharedObject_itf {
 
 	public int getId() {
 		return id;
-	}
-
-	public lockType getLock() {
-		return lock;
 	}
 }

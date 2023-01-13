@@ -46,12 +46,14 @@ public class Server extends UnicastRemoteObject implements Server_itf {
 
     @Override
     public Object lock_read(int id, Client_itf client) throws RemoteException {
-        return objects.get(id).lock_read(client);
+    	objects.get(id).lock_read(client);
+        return objects.get(id).obj;
     }
 
     @Override
     public Object lock_write(int id, Client_itf client) throws RemoteException {
-        return objects.get(id).lock_write(client);
+    	objects.get(id).lock_write(client);
+        return objects.get(id).obj;
     }
     
 
@@ -60,11 +62,6 @@ public class Server extends UnicastRemoteObject implements Server_itf {
             Registry registre = LocateRegistry.createRegistry(4000);
         } catch (RemoteException e) {
         }
-        Naming.rebind("//localhost:4000/server", new Server());
+        Naming.bind("//localhost:4000/server", new Server());
     }
-
-    public ArrayList<ServerObject> getObjects() {
-        return objects;
-    }
-
 }

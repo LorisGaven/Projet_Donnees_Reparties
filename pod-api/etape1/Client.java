@@ -40,12 +40,16 @@ public class Client extends UnicastRemoteObject implements Client_itf {
 		int id;
 		try {
 			id = s.lookup(name);
-			if (id == -1) {
-				return null;
+			if (objects.containsKey(id)) {
+				return objects.get(id);
 			} else {
-				SharedObject object = new SharedObject(s.lock_read(id, Client.instance), id);
-				objects.put(id, object);
-				return object;
+				if (id == -1) {
+					return null;
+				} else {
+					SharedObject object = new SharedObject(null, id);
+					objects.put(id, object);
+					return object;
+				}
 			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -83,27 +87,26 @@ public class Client extends UnicastRemoteObject implements Client_itf {
 	// request a read lock from the server
 	public static Object lock_read(int id) {
 		try {
-			s.lock_read(id, instance);
+			return s.lock_read(id, instance);
 		} catch (RemoteException e) {
 			e.printStackTrace();
+			return null;
 		}
-		return objects.get(id).obj;
 	}
 
 	// request a write lock from the server
 	public static Object lock_write (int id) {
 		try {
-			s.lock_write(id, instance);
+			return s.lock_write(id, instance);
 		} catch (RemoteException e) {
 			e.printStackTrace();
+			return null;
 		}
-		return objects.get(id).obj;
 	}
 
 	// receive a lock reduction request from the server
 	public Object reduce_lock(int id) throws java.rmi.RemoteException {
-		objects.get(id).reduce_lock();
-		return objects.get(id).obj;
+		return objects.get(id).reduce_lock();
 	}
 
 
@@ -115,7 +118,6 @@ public class Client extends UnicastRemoteObject implements Client_itf {
 
 	// receive a writer invalidation request from the server
 	public Object invalidate_writer(int id) throws java.rmi.RemoteException {
-		objects.get(id).invalidate_writer();
-		return objects.get(id).obj;
+		return objects.get(id).invalidate_writer();
 	}
 }

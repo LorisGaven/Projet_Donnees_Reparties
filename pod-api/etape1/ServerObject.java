@@ -23,22 +23,22 @@ public class ServerObject {
 	}
 
 	// invoked by the user program on the client node
-	public Object lock_read(Client_itf client) {
+	public void lock_read(Client_itf client) {
 		try {
 			if (lock == lockType.WL) {
-				obj = client.reduce_lock(id);
-				ecrivain = null;
+				obj = ecrivain.reduce_lock(id);
+				lecteurs.add(ecrivain);
 			}
+			ecrivain = null;
 			lecteurs.add(client);
 			lock = lockType.RL;
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
-		return obj;
 	}
 
 	// invoked by the user program on the client node
-	public Object lock_write(Client_itf client) {
+	public void lock_write(Client_itf client) {
 		if (lock == lockType.RL) {
 			lecteurs.remove(client);
 			for (Client_itf lecteur : lecteurs) {
@@ -61,7 +61,5 @@ public class ServerObject {
 		lecteurs.clear();
 		ecrivain = client;
 		lock = lockType.WL;
-
-		return obj;
 	}
 }

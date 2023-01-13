@@ -29,7 +29,6 @@ public class Irc extends Frame {
 		// if not found, create it, and register it in the name server
 		SharedObject s = Client.lookup("IRC");
 		if (s == null) {
-			System.out.println("test");
 			s = Client.create(new Sentence());
 			Client.register("IRC", s);
 		}
@@ -74,13 +73,17 @@ class readListener implements ActionListener {
 	public void actionPerformed (ActionEvent e) {
 		
 		// lock the object in read mode
+		System.out.println("IRC " + Irc.myName + " demande lockRead");
 		irc.sentence.lock_read();
+		System.out.println("Lock read accepté");
 		
 		// invoke the method
 		String s = ((Sentence)(irc.sentence.obj)).read();
 		
 		// unlock the object
+		System.out.println("IRC " + Irc.myName + " unlock");
 		irc.sentence.unlock();
+		System.out.println("Unlock OK");
 		
 		// display the read value
 		irc.text.append(s+"\n");
