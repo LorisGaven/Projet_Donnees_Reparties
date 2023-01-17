@@ -30,19 +30,11 @@ public class SharedObject implements Serializable, SharedObject_itf {
 	// invoked by the user program on the client node
 	public void lock_read() {
 		moniteur.lock();
-		while (attendre) {
-			try {
-				accesPossible.await();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		moniteur.unlock();
+		boolean modifier = false;
 		switch(lock) {
 			case NL :
 				lock = lockType.RLT;
-				obj = Client.lock_read(id);
+				modifier = true;
 				break;
 			case RLC:
 				lock = lockType.RLT;
@@ -53,26 +45,24 @@ public class SharedObject implements Serializable, SharedObject_itf {
 			default:
 				break;
 		}
-
+		moniteur.unlock();
+		if (modifier) {
+			obj = Client.lock_read(id);
+		}
 		
 	}
 
 	// invoked by the user program on the client node
 	public void lock_write() {
 		moniteur.lock();
-		while (attendre) {
-			try {
-				accesPossible.await();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		boolean modifier = lock == lockType.NL || lock == lockType.RLC;
+		if (lock != lockType.RLT_WLC) {
+			lock = lockType.WLT;
 		}
-
 		moniteur.unlock();
-		if (lock == lockType.NL || lock == lockType.RLC) {
+		if (modifier) {
 			obj = Client.lock_write(id);
 		}
-		lock = lockType.WLT;
 	}
 
 	// invoked by the user program on the client node
@@ -91,7 +81,6 @@ public class SharedObject implements Serializable, SharedObject_itf {
 	// callback invoked remotely by the server
 	public synchronized Object reduce_lock() {
 		moniteur.lock();
-		attendre = true;
 		while (lock == lockType.WLT) {
 			try {
 				accesPossible.await();
@@ -103,8 +92,6 @@ public class SharedObject implements Serializable, SharedObject_itf {
 		if (lock == lockType.WLC || lock == lockType.RLT_WLC) {
 			lock = lockType.RLC;
 		}
-		attendre = false;
-		accesPossible.signal();
 		moniteur.unlock();
 		return obj;
 	}
@@ -112,7 +99,6 @@ public class SharedObject implements Serializable, SharedObject_itf {
 	// callback invoked remotely by the server
 	public synchronized void invalidate_reader() {
 		moniteur.lock();
-		attendre = true;
 		while (lock == lockType.RLT) {
 			try {
 				accesPossible.await();
@@ -124,15 +110,12 @@ public class SharedObject implements Serializable, SharedObject_itf {
 		if (lock == lockType.RLC) {
 			lock = lockType.NL;
 		}
-		attendre = false;
-		accesPossible.signal();
 		moniteur.unlock();
 	}
 
 	public synchronized Object invalidate_writer() {
 		moniteur.lock();
-		attendre = true;
-		while (lock == lockType.WLT || lock == lockType.RLT_WLC) {
+		while (lock == lockType.WLT) {
 			try {
 				accesPossible.await();
 			} catch (InterruptedException e) {
@@ -140,9 +123,9 @@ public class SharedObject implements Serializable, SharedObject_itf {
 			}
 		}
 
-		lock = lockType.NL;
-		attendre = false;
-		accesPossible.signal();
+		if (lock == lockType.WLC || lock == lockType.RLT_WLC) {
+			lock = lockType.NL;	
+		}
 		moniteur.unlock();
 		return obj;
 	}
