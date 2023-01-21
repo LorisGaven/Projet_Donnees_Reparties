@@ -11,7 +11,7 @@ import java.rmi.registry.*;
 public class Irc extends Frame {
 	public TextArea		text;
 	public TextField	data;
-	SharedObject		sentence;
+	Sentence_itf		sentence;
 	static String		myName;
 
 	public static void main(String argv[]) {
@@ -27,16 +27,16 @@ public class Irc extends Frame {
 		
 		// look up the IRC object in the name server
 		// if not found, create it, and register it in the name server
-		SharedObject s = Client.lookup("IRC");
+		Sentence_itf s = (Sentence_itf)Client.lookup("IRC");
 		if (s == null) {
-			s = Client.create(new Sentence());
+			s = (Sentence_itf)Client.create(new Sentence());
 			Client.register("IRC", s);
 		}
 		// create the graphical part
 		new Irc(s);
 	}
 
-	public Irc(SharedObject s) {
+	public Irc(Sentence_itf s) {
 	
 		setLayout(new FlowLayout());
 	
@@ -57,7 +57,7 @@ public class Irc extends Frame {
 		
 		setSize(470,300);
 		text.setBackground(Color.black); 
-		show();
+		show();		
 		
 		sentence = s;
 	}
@@ -73,17 +73,13 @@ class readListener implements ActionListener {
 	public void actionPerformed (ActionEvent e) {
 		
 		// lock the object in read mode
-		System.out.println("IRC " + Irc.myName + " demande lockRead");
 		irc.sentence.lock_read();
-		System.out.println("Lock read accepté");
 		
 		// invoke the method
-		String s = ((Sentence)(irc.sentence.obj)).read();
+		String s = irc.sentence.read();
 		
 		// unlock the object
-		System.out.println("IRC " + Irc.myName + " unlock");
 		irc.sentence.unlock();
-		System.out.println("Unlock OK");
 		
 		// display the read value
 		irc.text.append(s+"\n");
@@ -100,11 +96,11 @@ class writeListener implements ActionListener {
 		// get the value to be written from the buffer
         String s = irc.data.getText();
         	
-        // lock the object in write mode
+        	// lock the object in write mode
 		irc.sentence.lock_write();
 		
 		// invoke the method
-		((Sentence)(irc.sentence.obj)).write(Irc.myName+" wrote "+s);
+		irc.sentence.write(Irc.myName+" wrote "+s);
 		irc.data.setText("");
 		
 		// unlock the object

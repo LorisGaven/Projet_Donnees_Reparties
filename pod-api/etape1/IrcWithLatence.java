@@ -8,19 +8,23 @@ import java.lang.*;
 import java.rmi.registry.*;
 
 
-public class Irc extends Frame {
+public class IrcWithLatence extends Frame {
 	public TextArea		text;
 	public TextField	data;
 	Sentence_itf		sentence;
 	static String		myName;
+	static long readLatence, writeLatence;
 
 	public static void main(String argv[]) {
 		
-		if (argv.length != 1) {
-			System.out.println("java Irc <name>");
+		if (argv.length != 3) {
+			System.out.println("java Irc <name> <read_latence> <write_latence>");
 			return;
 		}
 		myName = argv[0];
+		readLatence = Long.parseLong(argv[1]);
+		writeLatence = Long.parseLong(argv[2]);
+		
 	
 		// initialize the system
 		Client.init();
@@ -33,10 +37,10 @@ public class Irc extends Frame {
 			Client.register("IRC", s);
 		}
 		// create the graphical part
-		new Irc(s);
+		new IrcWithLatence(s, readLatence, writeLatence);
 	}
 
-	public Irc(Sentence_itf s) {
+	public IrcWithLatence(Sentence_itf s, long readLatence, long writeLatence) {
 	
 		setLayout(new FlowLayout());
 	
@@ -49,10 +53,10 @@ public class Irc extends Frame {
 		add(data);
 	
 		Button write_button = new Button("write");
-		write_button.addActionListener(new writeListener(this));
+		write_button.addActionListener(new writeListenerLatence(this, writeLatence));
 		add(write_button);
 		Button read_button = new Button("read");
-		read_button.addActionListener(new readListener(this));
+		read_button.addActionListener(new readListenerLatence(this, readLatence));
 		add(read_button);
 		
 		setSize(470,300);
@@ -65,15 +69,23 @@ public class Irc extends Frame {
 
 
 
-class readListener implements ActionListener {
-	Irc irc;
-	public readListener (Irc i) {
+class readListenerLatence implements ActionListener {
+	IrcWithLatence irc;
+	long readLatence;
+	public readListenerLatence (IrcWithLatence i, long readLatence) {
 		irc = i;
+		this.readLatence = readLatence;
 	}
 	public void actionPerformed (ActionEvent e) {
 		
 		// lock the object in read mode
 		irc.sentence.lock_read();
+		
+		try {
+			Thread.sleep(readLatence * 1000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
 		
 		// invoke the method
 		String s = irc.sentence.read();
@@ -86,10 +98,12 @@ class readListener implements ActionListener {
 	}
 }
 
-class writeListener implements ActionListener {
-	Irc irc;
-	public writeListener (Irc i) {
+class writeListenerLatence implements ActionListener {
+	IrcWithLatence irc;
+	long writeLatence;
+	public writeListenerLatence (IrcWithLatence i, long writeLatence) {
         	irc = i;
+        	this.writeLatence = writeLatence;
 	}
 	public void actionPerformed (ActionEvent e) {
 		
@@ -99,8 +113,14 @@ class writeListener implements ActionListener {
         	// lock the object in write mode
 		irc.sentence.lock_write();
 		
+		try {
+			Thread.sleep(writeLatence * 1000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		
 		// invoke the method
-		irc.sentence.write(Irc.myName+" wrote "+s);
+		irc.sentence.write(IrcWithLatence.myName+" wrote "+s);
 		irc.data.setText("");
 		
 		// unlock the object
