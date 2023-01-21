@@ -119,8 +119,6 @@ public class StubGenerator {
 
         if (!containsClass) {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            //DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-            //StandardJavaFileManager sjfm = compiler.getStandardFileManager(diagnostics, null, null);
             int result = compiler.run(null, null, null, "-d", ".", name + "_stub.java");
             if (result == 0) {
                 System.out.println("Compilation réussie");
@@ -128,12 +126,5 @@ public class StubGenerator {
                 System.out.println("La compilation a échoué");
             }
         }
-    }
-
-
-
-
-    public static void main(String[] args) {
-        generateStub(new Sentence1());
     }
 }

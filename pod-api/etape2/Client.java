@@ -3,6 +3,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.rmi.registry.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.*;
 
 public class Client extends UnicastRemoteObject implements Client_itf {
@@ -46,12 +48,19 @@ public class Client extends UnicastRemoteObject implements Client_itf {
 				if (id == -1) {
 					return null;
 				} else {
-					SharedObject object = new Sentence_stub(null, id);
+					
+					Object obj = s.lock_read(id, instance);
+					StubGenerator.generateStub(obj);
+					String className = obj.getClass().getSimpleName() + "_stub";
+					Class<?> classe = Class.forName(className);
+					Constructor<?> cons = classe.getConstructor(new Class[] {Object.class, int.class});
+					SharedObject object = (SharedObject) cons.newInstance(null, id);
 					objects.put(id, object);
 					return object;
 				}
 			}
-		} catch (RemoteException e) {
+		} catch (RemoteException | ClassNotFoundException | NoSuchMethodException 
+				| InvocationTargetException | IllegalAccessException | InstantiationException e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -71,10 +80,16 @@ public class Client extends UnicastRemoteObject implements Client_itf {
 		int id;
 		try {
 			id = s.create(o);
-			SharedObject object = new Sentence_stub(o, id);
+			StubGenerator.generateStub(o);
+			
+			String className = o.getClass().getSimpleName() + "_stub";
+			Class<?> classe = Class.forName(className);
+			Constructor<?> cons = classe.getConstructor(new Class[] {Object.class, int.class});
+			SharedObject object = (SharedObject) cons.newInstance(o, id);
 			objects.put(id, object);
 			return object;
-		} catch (RemoteException e) {
+		} catch (RemoteException | ClassNotFoundException | NoSuchMethodException 
+				| InvocationTargetException | IllegalAccessException | InstantiationException e) {
 			e.printStackTrace();
 			return null;
 		}
